@@ -9,6 +9,8 @@
 #include <command.h>
 #include <mmc.h>
 
+
+
 static int curr_device = -1;
 #ifndef CONFIG_GENERIC_MMC
 static int do_mmcops(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]);
@@ -80,6 +82,8 @@ enum mmc_state {
 	MMC_WRITE,
 	MMC_ERASE,
 };
+
+
 static void print_mmcinfo(struct mmc *mmc)
 {
 	printf("Device: %s\n", mmc->name);
@@ -98,8 +102,19 @@ static void print_mmcinfo(struct mmc *mmc)
 	printf("High Capacity: %s\n", mmc->high_capacity ? "Yes" : "No");
 	puts("Capacity: ");
 	print_size(mmc->capacity, "\n");
-
+        printf("%llu", mmc->capacity);
+	printf("\n");
+	int mmcsize = (mmc->capacity);
+ 	setenv_ulong("mmcsize1", (mmc->capacity) >> 12);
 	printf("Bus Width: %d-bit\n", mmc->bus_width);
+	//setenv("devicesize", (int) mmcsize);
+	//int mmcspace = mmcsize1/1024;
+	//char mmcs = mmcspace;
+//	char *mmcsize = mmc->capacity;
+//	setenv_ulong("mmcsize", mmcsize);
+	//printf(mmcsize,"\n");
+//	printf("%llu", mmcsize1);
+
 }
 
 static int do_mmcinfo(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
@@ -134,6 +149,58 @@ U_BOOT_CMD(
 	mmcinfo, 1, 0, do_mmcinfo,
 	"display MMC info",
 	"- display info of the current MMC device"
+);
+static void setenv_mmcsize(struct mmc *mmc)
+{
+	printf("Device: %s\n", mmc->name);
+	puts("Capacity: ");
+	print_size(mmc->capacity, "\n");
+	printf("\n");
+        printf("%llu", mmc->capacity);
+ 	setenv_ulong("mmcsize1", (mmc->capacity) >> 10);
+//	int mmcsize = (mmc->capacity);
+	//setenv("devicesize", (int) mmcsize);
+	//int mmcspace = mmcsize1/1024;
+	//char mmcs = mmcspace;
+//	char *mmcsize = mmc->capacity;
+//	setenv_ulong("mmcsize", mmcsize);
+	//printf(mmcsize,"\n");
+//	printf("%llu", mmcsize1);
+
+}
+
+static int do_setenv_mmcsize(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+	struct mmc *mmc;
+
+#if 1
+	if (curr_device < 0) {
+		if (get_mmc_num() > 0)
+			curr_device = 0;
+		else {
+			puts("No MMC device available\n");
+			return 1;
+		}
+	}
+#endif
+
+	mmc = find_mmc_device(curr_device);
+
+	if (mmc) {
+		mmc_init(mmc);
+
+		print_mmcinfo(mmc);
+		return 0;
+	} else {
+		printf("no mmc device at slot %x\n", curr_device);
+		return 1;
+	}
+}
+
+U_BOOT_CMD(
+	mmcsize, 1, 0, do_setenv_mmcsize,
+	"sets device size to env variable",
+	"- sets size of the current MMC device"
 );
 
 #ifdef DUMP_ONE_BLOCK
@@ -488,6 +555,56 @@ enum mmc_state {
 	MMC_WRITE,
 	MMC_ERASE,
 };
+static void setenv_mmcsize(struct mmc *mmc)
+{
+	printf("Device: %s\n", mmc->name);
+	printf("%s version %d.%d\n", IS_SD(mmc) ? "SD" : "MMC",
+			(mmc->version >> 8) & 0xf, mmc->version & 0xff);
+	puts("Capacity: ");
+	print_size(mmc->capacity, "\n");
+        printf("%llu", mmc->capacity);
+        printf("\n");
+ 	setenv_ulong("mmcsize1", (mmc->capacity) >> 10);
+//	int mmcsize = (mmc->capacity);
+//	setenv("devicesize", (int) mmcsize);
+//      printf("%llu", mmcsize1);
+//	char *mmcsize = mmc->capacity;
+//	printf(mmcsize,"\n");
+//      setenv_ulong("mmcsize", mmcsize);
+
+}
+
+static int do_setenv_mmcsize(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+{
+	struct mmc *mmc;
+
+	if (curr_device < 0) {
+		if (get_mmc_num() > 0)
+			curr_device = 0;
+		else {
+			puts("No MMC device available\n");
+			return 1;
+		}
+	}
+
+	mmc = find_mmc_device(curr_device);
+
+	if (mmc) {
+		mmc_init(mmc);
+
+		setenv_mmcsize(mmc);
+		return 0;
+	} else {
+		printf("no mmc device at slot %x\n", curr_device);
+		return 1;
+	}
+}
+
+U_BOOT_CMD(
+	mmcsize, 1, 0, do_setenv_mmcsize,
+	"sets mmc device size to env variable",
+	"- display size of the current MMC device"
+);
 static void print_mmcinfo(struct mmc *mmc)
 {
 	printf("Device: %s\n", mmc->name);
@@ -506,8 +623,17 @@ static void print_mmcinfo(struct mmc *mmc)
 	printf("High Capacity: %s\n", mmc->high_capacity ? "Yes" : "No");
 	puts("Capacity: ");
 	print_size(mmc->capacity, "\n");
-
+        printf("%llu", mmc->capacity);
 	printf("Bus Width: %d-bit\n", mmc->bus_width);
+ 	setenv_ulong("mmcsize1", (mmc->capacity) >> 10);
+        printf("\n");
+//	int mmcsize = (mmc->capacity);
+//	setenv("devicesize", (int) mmcsize);
+//      printf("%llu", mmcsize1);
+//	char *mmcsize = mmc->capacity;
+//	printf(mmcsize,"\n");
+//      setenv_ulong("mmcsize", mmcsize);
+
 }
 
 static int do_mmcinfo(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
@@ -541,6 +667,7 @@ U_BOOT_CMD(
 	"display MMC info",
 	"- display info of the current MMC device"
 );
+
 
 static int do_mmcops(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
