@@ -205,7 +205,6 @@
 #define ENV_BOOT_CMD1 \
     "boot1=tftpboot;run boot_wr_img;run boot_rd_img;bootm\0"
 
-
 #define ENV_BOOT_CMD2 \
     "boot2=run boot_rd_img;run rescue;bootm\0"
 
@@ -251,7 +250,6 @@
     ENV_BOOT_CMD9 \
     ENV_BOOT_CMD10
 
-
 #define ENV_BOOT_MENU \
     "bpiver=1\0" \
     "bpi=bananapi\0" \
@@ -273,17 +271,24 @@
     ""
 
 #define ENV_BOOT_GET_DEVICE \
-    "getbootdevice=setenv bootdevice 1; if test ${bootemmc} = true; then setenv bootdevice 0; fi;\0"
+    "getbootdevice=setenv bootdevice 1; if test ${bootemmc} = true; then setenv bootdevice 0; fi; run setbootdevsize;\0"
 
 #define ENV_BOOT_SET_BOOTARGS \
-    "configBootargs=run getbootdevice; setenv bootargs earlyprintk block2mtd.block2mtd=/dev/mmcblk${bootdevice},65536,RootFs,5 mtdparts=RootFs:512k(mbr)ro,512k(uboot)ro,512k(config)ro,512k(factory)ro,32M(kernel),32M(recovery),1024M(rootfs),2048M(usrdata),-(bmtpool) rootfstype=squashfs,jffs2\0"
+    "configBootargs=run getbootdevice; setenv bootargs earlyprintk console=ttyS0,115200 block2mtd.block2mtd=/dev/mmcblk${bootdevice},65536,RootFs,5 mtdparts=RootFs:512k(mbr)ro,512k(uboot)ro,512k(config)ro,512k(factory)ro,32M(kernel),32M(recovery),256M(rootfs),${usrdsize}(usrdata) rootfstype=squashfs,jffs2\0"
+
+#define ENV_BOOT_SET_DEVICE_SIZE \
+    "setbootdevsize=mmcsize; if itest.l ${mmcsize1} -le 33000000 && itest.l ${mmcsize1} -ge 31000000; then setenv usrdsize 31232M ; "\
+    "fi; if itest.l ${mmcsize1} -le 16000000 && itest.l ${mmcsize1} -ge 15500000; then setenv usrdsize 15360M ; fi; if itest.l ${mmcsize1} -le  8500000 "\
+    "&& itest.l ${mmcsize1} -ge   7500000; then setenv usrdsize 7168M ; fi; if itest.l ${mmcsize1} -le  4500000 && itest.l ${mmcsize1} -ge   3500000; then setenv usrdsize 3584M ; fi;\0"
+
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	ENV_DEVICE_SETTINGS \
 	ENV_BOOT_CMD        \
 	ENV_BOOT_MENU       \
 	ENV_BOOT_GET_DEVICE \
-        ENV_BOOT_SET_BOOTARGS
+        ENV_BOOT_SET_BOOTARGS \
+        ENV_BOOT_SET_DEVICE_SIZE
 
 
 /**********************************************************************************************
@@ -322,3 +327,4 @@
 //#define CONFIG_LZMA
 
 #endif
+
